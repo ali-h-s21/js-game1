@@ -1,4 +1,5 @@
 const canvas = document.querySelector("canvas");
+const score = document.getElementById("score");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -205,6 +206,7 @@ function animate() {
             projectiles.splice(projectileIndex, 1);
           }, 0);
         } else {
+          score.innerText = Math.floor(Number(score.innerText) + enemy.radius);
           setTimeout(() => {
             enemies.splice(enemyIndex, 1);
             projectiles.splice(projectileIndex, 1);
