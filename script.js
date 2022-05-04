@@ -4,6 +4,10 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const canvasCenterX = canvas.width / 2;
 const canvasCenterY = canvas.height / 2;
+const friction = 0.98;
+const projectiles = [];
+const enemies = [];
+const particles = [];
 
 const ctx = canvas.getContext("2d");
 
@@ -69,10 +73,37 @@ class Enemy {
   }
 }
 
-const firstPlayer = new Player(canvasCenterX, canvasCenterY, 15, "white");
+class Particle {
+  constructor(x, y, radius, color, velocity) {
+    this.x = x;
+    this.y = y;
+    this.radius = radius;
+    this.velocity = velocity;
+    this.color = color;
+    this.alpha = 1;
+  }
 
-const projectiles = [];
-const enemies = [];
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  update() {
+    this.draw();
+    this.velocity.x *= friction;
+    this.velocity.y *= friction;
+    this.x = this.x + this.velocity.x;
+    this.y = this.y + this.velocity.y;
+    this.alpha -= 0.01;
+  }
+}
+
+const firstPlayer = new Player(canvasCenterX, canvasCenterY, 15, "white");
 
 function spawnEnemies() {
   setInterval(() => {
@@ -108,6 +139,14 @@ function animate() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   firstPlayer.draw();
 
+  particles.forEach((particle, particleIndex) => {
+    if (particle.alpha <= 0) {
+      particles.splice(particleIndex, 1);
+    } else {
+      particle.update();
+    }
+  });
+
   projectiles.forEach((projectile, projectileIndex) => {
     projectile.update(5);
 
@@ -142,11 +181,35 @@ function animate() {
         projectile.y - enemy.y
       );
 
+      // projecile hit enemy
       if (Math.round(distance - enemy.radius - projectile.radius) < 1) {
-        setTimeout(() => {
-          enemies.splice(enemyIndex, 1);
-          projectiles.splice(projectileIndex, 1);
-        }, 0);
+        for (let i = 0; i < enemy.radius; i++) {
+          particles.push(
+            new Particle(
+              projectile.x,
+              projectile.y,
+              Math.random() * 2,
+              enemy.color,
+              {
+                x: (Math.random() - 0.5) * (Math.random() * 5),
+                y: (Math.random() - 0.5) * (Math.random() * 5),
+              }
+            )
+          );
+        }
+        if (enemy.radius - 15 > 10) {
+          gsap.to(enemy, {
+            radius: enemy.radius - 10,
+          });
+          setTimeout(() => {
+            projectiles.splice(projectileIndex, 1);
+          }, 0);
+        } else {
+          setTimeout(() => {
+            enemies.splice(enemyIndex, 1);
+            projectiles.splice(projectileIndex, 1);
+          }, 0);
+        }
       }
     });
   });
