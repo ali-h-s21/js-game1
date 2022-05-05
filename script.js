@@ -1,16 +1,21 @@
 const canvas = document.querySelector("canvas");
+const scoreBox = document.querySelector(".score-box");
 const score = document.getElementById("score");
+const restartModal = document.querySelector(".restart-modal");
+const finalScore = document.getElementById("final-score");
+const startBtn = document.getElementById("start-game-btn");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const canvasCenterX = canvas.width / 2;
 const canvasCenterY = canvas.height / 2;
 const friction = 0.98;
-const projectiles = [];
-const enemies = [];
-const particles = [];
+let projectiles = [];
+let enemies = [];
+let particles = [];
 
 const ctx = canvas.getContext("2d");
+let enemiesInterval;
 
 class Player {
   constructor(x, y, radius, color) {
@@ -107,7 +112,7 @@ class Particle {
 const firstPlayer = new Player(canvasCenterX, canvasCenterY, 15, "white");
 
 function spawnEnemies() {
-  setInterval(() => {
+  enemiesInterval = setInterval(() => {
     // 20 is the minimum size of the enemy
     // so this line will make sure that we only get a value between 20 and 40
     const radius = Math.random() * (40 - 20) + 20;
@@ -169,8 +174,16 @@ function animate() {
       firstPlayer.x - enemy.x,
       firstPlayer.y - enemy.y
     );
+    // enemy hit the player => end the game
     if (Math.round(distance - enemy.radius - firstPlayer.radius) < 1) {
-      firstPlayer.color = "red";
+      restartModal.classList.remove("hide");
+      scoreBox.classList.add("hide");
+      finalScore.innerText = score.innerText;
+      score.innerText = "0";
+      enemies = [];
+      projectiles = [];
+      particles = [];
+      clearInterval(enemiesInterval);
       setTimeout(() => {
         cancelAnimationFrame(animationId);
       }, 50);
@@ -205,7 +218,7 @@ function animate() {
           setTimeout(() => {
             projectiles.splice(projectileIndex, 1);
           }, 0);
-        } else {
+        } else if (enemy.radius - 15 < 10) {
           score.innerText = Math.floor(Number(score.innerText) + enemy.radius);
           setTimeout(() => {
             enemies.splice(enemyIndex, 1);
@@ -229,20 +242,24 @@ window.addEventListener("click", (e) => {
   };
 
   // this to shoot another projectile in a slightly different angle
-  // const velocity2 = {
-  //   x: Math.cos(angle) + 0.015,
-  //   y: Math.sin(angle) + 0.15,
-  // };
-  // const velocity3 = {
-  //   x: Math.cos(angle) + 0.15,
-  //   y: Math.sin(angle) + 0.15,
-  // };
+  const velocity2 = {
+    x: Math.cos(angle) * 4,
+    y: Math.sin(angle) * 4.5,
+  };
+  const velocity3 = {
+    x: Math.cos(angle) * 3,
+    y: Math.sin(angle) * 3.5,
+  };
   projectiles.push(
-    new Projectile(canvasCenterX, canvasCenterY, 5, "white", velocity)
-    // new Projectile(canvasCenterX, canvasCenterY, 5, "blue", velocity2),
-    // new Projectile(canvasCenterX, canvasCenterY, 5, "blue", velocity3)
+    new Projectile(canvasCenterX, canvasCenterY, 5, "white", velocity),
+    new Projectile(canvasCenterX, canvasCenterY, 5, "white", velocity2),
+    new Projectile(canvasCenterX, canvasCenterY, 5, "white", velocity3)
   );
 });
 
-spawnEnemies();
-animate();
+startBtn.addEventListener("click", () => {
+  restartModal.classList.add("hide");
+  scoreBox.classList.remove("hide");
+  spawnEnemies();
+  animate();
+});

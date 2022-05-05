@@ -17,9 +17,17 @@
   </head>
   <body>
     <div class="game">
-      <div class="score-box">
+      <div class="score-box hide no-select">
         <span>score:</span>
         <span id="score">0</span>
+      </div>
+
+      <div class="restart-modal no-select">
+        <div class="score">
+          <h2 id="final-score">0</h2>
+          <span>Points</span>
+        </div>
+        <button id="start-game-btn">New Game</button>
       </div>
       <canvas></canvas>
     </div>
